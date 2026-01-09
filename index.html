@@ -2,18 +2,42 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>комару квадратик чеееее</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Я В КВАДРАТЕ</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.146.0/three.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Google Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        'surface': '#fffbff',
+                        'surface-variant': '#f3edf7',
+                        'primary': '#6750a4',
+                        'primary-container': '#eaddff',
+                        'on-primary-container': '#21005d',
+                        'secondary-container': '#e8def8',
+                    },
+                    borderRadius: {
+                        '4xl': '32px',
+                        '5xl': '40px',
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
         body {
             margin: 0;
-            font-family: 'Google Sans', sans-serif;
             background-color: #f8f9ff;
             overflow-x: hidden;
-            color: #1a1c1e;
+            -webkit-tap-highlight-color: transparent;
         }
 
         #canvas-container {
@@ -23,198 +47,223 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: radial-gradient(circle at 50% 50%, #ffffff 0%, #eef2ff 100%);
+            background: radial-gradient(circle at 50% 0%, #fff 0%, #f0f4ff 100%);
         }
 
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(32px) saturate(180%);
-            -webkit-backdrop-filter: blur(32px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            border-radius: 40px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.03);
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease;
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px) saturate(120%);
+            -webkit-backdrop-filter: blur(20px) saturate(120%);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+            transform-style: preserve-3d;
+            perspective: 1000px;
         }
 
-        .glass-panel:hover {
-            transform: scale(1.02) translateY(-4px);
-            box-shadow: 0 20px 40px rgba(103, 80, 164, 0.08);
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.35);
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
         }
 
-        .chip {
-            background: rgba(103, 80, 164, 0.08);
-            border-radius: 100px;
-            padding: 8px 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: #6750A4;
-            display: inline-flex;
-            align-items: center;
+        .glass-card:active {
+            transform: scale(0.97) !important;
         }
 
-        .profile-image {
-            width: 120px;
-            height: 120px;
-            border-radius: 42px;
-            object-fit: cover;
-            border: 4px solid white;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        .soundcloud-frame {
+            border-radius: 24px;
+            overflow: hidden;
+            mix-blend-mode: multiply;
         }
 
-        .stagger-up {
+        .stagger-in {
             opacity: 0;
-            transform: translateY(30px);
-            animation: appearUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            transform: translateY(20px);
+            animation: slideUpFade 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
-        @keyframes appearUp {
+        @keyframes slideUpFade {
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .button-press:active {
-            transform: scale(0.95);
+        .noise-overlay {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 50;
         }
 
         #projects-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 100;
-            background: rgba(0,0,0,0.1);
-            backdrop-filter: blur(8px);
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+            pointer-events: none;
         }
-
+        
         #projects-modal.active {
-            display: flex;
+            opacity: 1;
+            pointer-events: auto;
         }
 
-        #toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: #322f35;
-            color: #f5eff7;
-            padding: 12px 24px;
-            border-radius: 100px;
-            font-size: 0.9rem;
-            z-index: 1000;
-            transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
+        #modal-content {
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        #toast.visible {
-            transform: translateX(-50%) translateY(0);
+        #projects-modal.active #modal-content {
+            transform: translateY(0);
+        }
+
+        .avatar-container::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: linear-gradient(135deg, #d0bcff, #4fd8eb);
+            border-radius: 54px;
+            z-index: -1;
+            opacity: 0.6;
+            filter: blur(8px);
+            animation: pulse-glow 3s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
         }
     </style>
 </head>
-<body>
+<body class="text-[#1d1b20]">
 
     <div id="canvas-container"></div>
+    <div class="noise-overlay"></div>
 
-    <div id="toast">Скопировано в буфер обмена</div>
+    <main class="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8">
+        
+        <div class="w-full max-w-lg space-y-6">
+            
+            <header class="text-center space-y-6 pt-4">
+                <div class="stagger-in relative inline-block avatar-container" style="animation-delay: 0.1s;">
+                    <img src="https://avatars.githubusercontent.com/u/114910606" alt="Komaru" 
+                         class="w-32 h-32 rounded-[48px] object-cover border-[6px] border-white/60 shadow-xl backdrop-blur-md">
+                </div>
+                
+                <div class="stagger-in space-y-2" style="animation-delay: 0.2s;">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/40 text-on-primary-container text-sm font-medium border border-white/50 backdrop-blur-md">
+                        <span class="animate-pulse">✨</span> Я хочу слушать мууууузыку 
+                    </div>
+                    <h1 class="text-6xl font-bold tracking-tight text-slate-800 drop-shadow-sm">
+                        Комару
+                    </h1>
+                    <p class="text-lg text-slate-600 font-medium max-w-xs mx-auto leading-relaxed">
+                        Самая высшая точка развития человечества
+                    </p>
+                </div>
+            </header>
 
-    <div id="projects-modal" onclick="closeModal(event)">
-        <div class="glass-panel w-full max-w-sm p-8 space-y-6" onclick="event.stopPropagation()">
-            <div class="flex justify-between items-center">
-                <h2 class="text-2xl font-bold">Мои проекты</h2>
-                <button onclick="closeModal()" class="p-2 hover:bg-black/5 rounded-full">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round"/></svg>
+            <div class="glass-card rounded-[32px] p-2 stagger-in" style="animation-delay: 0.25s;">
+                <iframe width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay" 
+                    class="soundcloud-frame"
+                    src="https://w.soundcloud.com/player/?url=https%3A//soundcloud.com/femtanyl/body-the-pistol&color=%236750a4&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true">
+                </iframe>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 stagger-in" style="animation-delay: 0.3s;">
+                
+                <button onclick="openModal()" 
+                        class="glass-card tilt-card group relative h-48 rounded-[32px] p-6 text-left flex flex-col justify-between overflow-hidden cursor-pointer">
+                    <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
+                        <svg class="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100/50 backdrop-blur-sm rounded-2xl flex items-center justify-center text-blue-600 group-hover:scale-110 transition-transform duration-300">
+                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-800">Проекты</h3>
+                        <p class="text-gray-500 font-medium">Мои штуки</p>
+                    </div>
+                </button>
+
+                <a href="https://t.me/eto_komaru" target="_blank"
+                   class="glass-card tilt-card group relative h-48 rounded-[32px] p-6 text-left flex flex-col justify-between overflow-hidden">
+                    <div class="absolute -bottom-4 -right-4 w-32 h-32 bg-purple-200 rounded-full blur-2xl opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
+                    <div class="w-12 h-12 bg-purple-100/50 backdrop-blur-sm rounded-2xl flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform duration-300">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-800">Щитпост</h3>
+                        <p class="text-gray-500 font-medium">Мой канал</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="stagger-in flex flex-col sm:flex-row gap-3" style="animation-delay: 0.4s;">
+                <button onclick="copyToClipboard('@hkPresent', 'Telegram')" 
+                        class="glass-card flex-1 p-4 rounded-[24px] flex items-center justify-center gap-3 hover:bg-white/60 transition-colors group">
+                    <svg class="w-6 h-6 text-blue-500 group-hover:-translate-y-1 transition-transform" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.05-.21.01-.35-.26-.35-.06 0-.14.02-.21.04-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.13-.31-1.08-.66.02-.18.27-.36.74-.55 2.91-1.26 4.85-2.09 5.83-2.49 2.78-1.13 3.35-1.33 3.73-1.33.08 0 .27.02.39.12.1.08.13.19.14.27.01.06.01.24 0 .38z"/></svg>
+                    <span class="font-semibold text-gray-700">Telegram</span>
+                </button>
+                
+                <button onclick="copyToClipboard('ilove_python', 'Discord')" 
+                        class="glass-card flex-1 p-4 rounded-[24px] flex items-center justify-center gap-3 hover:bg-white/60 transition-colors group">
+                    <svg class="w-6 h-6 text-indigo-500 group-hover:-translate-y-1 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.2 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.53.31-1.07.57-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.6-9.61-4.43-14.03c-.01-.01-.02-.02-.03-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.85 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.85 2.12-1.89 2.12z"/>
+                    </svg>
+                    <span class="font-semibold text-gray-700">Discord</span>
                 </button>
             </div>
-            <div class="space-y-4">
-                <a href="https://t.me/komvpn" target="_blank" class="flex items-center p-4 bg-white/40 hover:bg-white/60 rounded-[24px] transition-all group">
-                    <span class="text-2xl mr-4">🛡️</span>
-                    <div class="flex-1">
-                        <p class="font-bold">Мой впн</p>
-                        <p class="text-xs text-gray-500">t.me/komvpn</p>
+
+            <footer class="text-center pt-8 pb-12 stagger-in" style="animation-delay: 0.5s;">
+                <p class="text-sm font-medium text-gray-400">sometimes I dream of saving the world</p>
+            </footer>
+        </div>
+    </main>
+
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#322f35] text-[#f5eff7] px-6 py-3 rounded-full shadow-lg transform translate-y-24 opacity-0 transition-all duration-300 z-50 flex items-center gap-3">
+        <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <span id="toast-text" class="font-medium text-sm">Скопировано</span>
+    </div>
+
+    <div id="projects-modal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/10 backdrop-blur-sm p-4" onclick="closeModal(event)">
+        <div id="modal-content" class="glass-card w-full max-w-sm rounded-t-[40px] sm:rounded-[40px] p-6 shadow-2xl space-y-6 max-h-[80vh] overflow-y-auto" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center px-2">
+                <h2 class="text-2xl font-bold text-gray-800">Проекты</h2>
+                <button onclick="closeModal()" class="w-10 h-10 rounded-full bg-white/50 flex items-center justify-center hover:bg-white/80 transition-colors">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-width="2" stroke-linecap="round"/></svg>
+                </button>
+            </div>
+            
+            <div class="space-y-3">
+                <a href="https://t.me/komvpn" target="_blank" class="block group">
+                    <div class="p-4 rounded-[28px] bg-white/40 hover:bg-white/60 transition-colors flex items-center gap-4 border border-white/40">
+                        <div class="w-12 h-12 rounded-2xl bg-white/80 text-2xl flex items-center justify-center shadow-sm">🛡️</div>
+                        <div class="flex-1">
+                            <p class="font-bold text-gray-800">Мой впн</p>
+                            <p class="text-xs text-gray-500">t.me/komvpn</p>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-white/50 flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
                     </div>
-                    <svg class="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-width="2" stroke-linecap="round"/></svg>
                 </a>
-                <a href="https://t.me/nasral_hack" target="_blank" class="flex items-center p-4 bg-white/40 hover:bg-white/60 rounded-[24px] transition-all group">
-                    <span class="text-2xl mr-4">💻</span>
-                    <div class="flex-1">
-                        <p class="font-bold">Мой чит</p>
-                        <p class="text-xs text-gray-500">t.me/nasral_hack</p>
+
+                <a href="https://t.me/nasral_hack" target="_blank" class="block group">
+                    <div class="p-4 rounded-[28px] bg-white/40 hover:bg-white/60 transition-colors flex items-center gap-4 border border-white/40">
+                        <div class="w-12 h-12 rounded-2xl bg-white/80 text-2xl flex items-center justify-center shadow-sm">💻</div>
+                        <div class="flex-1">
+                            <p class="font-bold text-gray-800">Мой чит</p>
+                            <p class="text-xs text-gray-500">t.me/nasral_hack</p>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-white/50 flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </div>
                     </div>
-                    <svg class="w-5 h-5 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-width="2" stroke-linecap="round"/></svg>
                 </a>
             </div>
         </div>
     </div>
-
-    <main class="relative z-10 min-h-screen flex flex-col items-center justify-center p-6 space-y-8">
-        
-        <header class="text-center space-y-4 stagger-up" style="animation-delay: 0.1s;">
-            <div class="relative inline-block">
-                <div class="absolute -inset-1 bg-gradient-to-tr from-purple-400 to-blue-400 rounded-[46px] blur-lg opacity-30 animate-pulse"></div>
-                <img src="https://avatars.githubusercontent.com/u/114910606" alt="Komaru" class="profile-image relative">
-            </div>
-            
-            <div class="space-y-2">
-                <div class="chip stagger-up" style="animation-delay: 0.2s;">
-                    <span class="mr-2">✨</span> Я хочу слушать мууууузыку
-                </div>
-                <h1 class="text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-gray-900 to-gray-600 stagger-up" style="animation-delay: 0.3s;">
-                    Комару
-                </h1>
-                <p class="text-lg text-gray-500 font-medium max-w-sm mx-auto stagger-up" style="animation-delay: 0.4s;">
-                    Самая высшая точка развития человечества
-                </p>
-            </div>
-        </header>
-
-        <div class="w-full max-w-2xl grid grid-cols-1 md:grid-cols-2 gap-4">
-            
-            <button onclick="openModal()" class="glass-panel p-6 flex flex-col justify-between h-48 button-press stagger-up text-left w-full" style="animation-delay: 0.5s;">
-                <div class="flex justify-between items-start">
-                    <div class="p-3 bg-blue-500/10 rounded-2xl">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                    </div>
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5"/></svg>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold">Проекты</h3>
-                    <p class="text-sm text-gray-500">Ну пожалуйста</p>
-                </div>
-            </button>
-
-            <a href="https://t.me/eto_komaru" target="_blank" class="glass-panel p-6 flex flex-col justify-between h-48 button-press stagger-up" style="animation-delay: 0.6s;">
-                <div class="flex justify-between items-start">
-                    <div class="p-3 bg-purple-500/10 rounded-2xl">
-                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                    </div>
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold">Мой щитпост</h3>
-                    <p class="text-sm text-gray-500">Абсолютно бессвязный поток текста и чеееее</p>
-                </div>
-            </a>
-
-            <div class="md:col-span-2 glass-panel p-4 flex justify-around stagger-up" style="animation-delay: 0.7s;">
-                <button onclick="copyToClipboard('@hkPresent', 'Ник Telegram')" class="p-4 hover:bg-blue-500/10 rounded-full transition-colors button-press flex items-center space-x-2 text-blue-600">
-                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.05-.21.01-.35-.26-.35-.06 0-.14.02-.21.04-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.13-.31-1.08-.66.02-.18.27-.36.74-.55 2.91-1.26 4.85-2.09 5.83-2.49 2.78-1.13 3.35-1.33 3.73-1.33.08 0 .27.02.39.12.1.08.13.19.14.27.01.06.01.24 0 .38z"/>
-                    </svg>
-                    <span class="font-bold text-sm hidden md:inline">Telegram</span>
-                </button>
-                
-                <button onclick="copyToClipboard('ilove_python', 'Ник Discord')" class="p-4 hover:bg-indigo-500/10 rounded-full transition-colors button-press flex items-center space-x-2 text-indigo-600">
-                    <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 11.721 11.721 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-                    </svg>
-                    <span class="font-bold text-sm hidden md:inline">Discord</span>
-                </button>
-            </div>
-        </div>
-
-        <footer class="text-gray-400 text-sm font-medium stagger-up" style="animation-delay: 0.8s;">
-            sometimes I dream of saving the world
-        </footer>
-    </main>
 
     <script>
         function copyToClipboard(text, label) {
@@ -226,9 +275,13 @@
             document.body.removeChild(input);
             
             const toast = document.getElementById('toast');
-            toast.innerText = `${label} скопирован: ${text}`;
-            toast.classList.add('visible');
-            setTimeout(() => toast.classList.remove('visible'), 2500);
+            const toastText = document.getElementById('toast-text');
+            toastText.innerText = `${label} скопирован`;
+            
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 2500);
         }
 
         function openModal() {
@@ -239,51 +292,106 @@
             document.getElementById('projects-modal').classList.remove('active');
         }
 
+        const cards = document.querySelectorAll('.tilt-card');
+        
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = ((y - centerY) / centerY) * -10;
+                const rotateY = ((x - centerX) / centerX) * 10;
+
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+            });
+
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)';
+            });
+        });
+
         let scene, camera, renderer, objects = [];
         let mouseX = 0, mouseY = 0;
 
         function initThree() {
+            const container = document.getElementById('canvas-container');
+            
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.z = 5;
+            scene.fog = new THREE.FogExp2(0xf0f4ff, 0.05);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.z = 8;
 
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
-            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.outputEncoding = THREE.sRGBEncoding; 
+            container.appendChild(renderer.domElement);
 
-            const light = new THREE.DirectionalLight(0xffffff, 1);
-            light.position.set(5, 5, 5).normalize();
-            scene.add(light);
-            scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 10, 7);
+            scene.add(dirLight);
+
+            const pointLight = new THREE.PointLight(0x6750a4, 2, 20);
+            pointLight.position.set(-5, 0, 5);
+            scene.add(pointLight);
 
             const material = new THREE.MeshPhysicalMaterial({
-                color: 0x6750A4,
-                metalness: 0.1,
-                roughness: 0.2,
-                transparent: true,
-                opacity: 0.15,
-                transmission: 0.5,
-                thickness: 0.5
+                color: 0xffffff,
+                roughness: 0.3,
+                metalness: 0.05,
+                transmission: 0,
+                thickness: 0,
+                clearcoat: 0.5,
+                clearcoatRoughness: 0.1,
             });
 
-            const mesh1 = new THREE.Mesh(new THREE.IcosahedronGeometry(1.5, 0), material);
-            const mesh2 = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), material.clone());
-            mesh2.material.color.set(0x4285F4);
-            const mesh3 = new THREE.Mesh(new THREE.TorusGeometry(0.7, 0.2, 16, 100), material.clone());
-            mesh3.material.color.set(0x34A853);
+            const geo1 = new THREE.IcosahedronGeometry(1.8, 0);
+            const mesh1 = new THREE.Mesh(geo1, material.clone());
+            mesh1.material.color.setHex(0xd0bcff); 
+            mesh1.position.set(-4, 3, -2);
+            scene.add(mesh1);
 
-            mesh1.position.set(-3, 3, -2);
-            mesh2.position.set(4, 0, -1);
-            mesh3.position.set(-1, -2, 0);
+            const geo2 = new THREE.CapsuleGeometry(1, 3, 4, 16);
+            const mesh2 = new THREE.Mesh(geo2, material.clone());
+            mesh2.material.color.setHex(0x4fd8eb);
+            mesh2.rotation.z = Math.PI / 4;
+            mesh2.position.set(5, -2, -3);
+            scene.add(mesh2);
 
-            scene.add(mesh1, mesh2, mesh3);
-            objects = [mesh1, mesh2, mesh3];
+            const geo3 = new THREE.TorusGeometry(1.5, 0.5, 32, 100);
+            const mesh3 = new THREE.Mesh(geo3, material.clone());
+            mesh3.material.color.setHex(0xf2b8b5);
+            mesh3.position.set(-3, -4, -1);
+            mesh3.rotation.x = Math.PI / 2;
+            scene.add(mesh3);
+            
+            const particleGeo = new THREE.SphereGeometry(0.2, 16, 16);
+            for(let i=0; i<10; i++) {
+                const mesh = new THREE.Mesh(particleGeo, material);
+                mesh.position.set(
+                    (Math.random() - 0.5) * 15,
+                    (Math.random() - 0.5) * 15,
+                    (Math.random() - 0.5) * 5 - 5
+                );
+                scene.add(mesh);
+                objects.push({ mesh, speed: Math.random() * 0.02 + 0.01 });
+            }
+
+            objects.push({ mesh: mesh1, speed: 0.005 }, { mesh: mesh2, speed: 0.008 }, { mesh: mesh3, speed: 0.006 });
 
             window.addEventListener('resize', onWindowResize, false);
             document.addEventListener('mousemove', (e) => {
-                mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-                mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
+                mouseX = (e.clientX - window.innerWidth / 2) * 0.001;
+                mouseY = (e.clientY - window.innerHeight / 2) * 0.001;
             }, false);
             
             animate();
@@ -297,12 +405,21 @@
 
         function animate() {
             requestAnimationFrame(animate);
+
+            camera.position.x += (mouseX * 5 - camera.position.x) * 0.05;
+            camera.position.y += (-mouseY * 5 - camera.position.y) * 0.05;
+            camera.lookAt(0, 0, 0);
+
+            const time = Date.now() * 0.001;
+
             objects.forEach((obj, i) => {
-                obj.rotation.x += 0.005;
-                obj.rotation.y += 0.005;
-                obj.position.y += Math.sin(Date.now() * 0.001 + i) * 0.002;
-                obj.position.x += (mouseX * 0.5 - obj.position.x) * 0.01;
+                if (obj.mesh) {
+                    obj.mesh.rotation.x += obj.speed;
+                    obj.mesh.rotation.y += obj.speed;
+                    obj.mesh.position.y += Math.sin(time + i) * 0.005;
+                }
             });
+
             renderer.render(scene, camera);
         }
 
